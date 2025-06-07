@@ -2,9 +2,63 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 
+# Page config
+st.set_page_config(page_title="Tournament ROI Tracker", layout="wide")
+
+# Theme switch
+if 'dark_mode' not in st.session_state:
+    st.session_state.dark_mode = False
+
+dark_mode = st.toggle("🌙 Dark Mode", value=st.session_state.dark_mode)
+st.session_state.dark_mode = dark_mode
+
+# Font and color setup
+font_family = "'Bebas Neue', sans-serif"
+background = "#0D1117" if dark_mode else "#ffffff"
+text_color = "#F5F5F5" if dark_mode else "#1A1A1A"
+heading_color = "#FFD700" if dark_mode else "#191970"
+button_bg = "#FFD700" if dark_mode else "#191970"
+button_hover = "#191970" if dark_mode else "#FFD700"
+button_text = "#191970" if dark_mode else "white"
+
+# Custom CSS
+st.markdown(f"""
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+
+        body {{
+            background-color: {background};
+            color: {text_color};
+            font-family: {font_family};
+        }}
+        .main {{
+            background-color: {background};
+        }}
+        h1, h2, h3, h4 {{
+            color: {heading_color};
+            font-family: {font_family};
+        }}
+        .stButton>button {{
+            background-color: {button_bg};
+            color: {button_text};
+            border-radius: 8px;
+            padding: 0.6em 1.2em;
+            border: none;
+            font-weight: bold;
+        }}
+        .stButton>button:hover {{
+            background-color: {button_hover};
+            color: {button_text};
+        }}
+        .stForm label {{
+            font-weight: bold;
+        }}
+    </style>
+""", unsafe_allow_html=True)
+
 # Page title
 st.title("🎾 Tournament Cost & ROI Tracker")
-st.write("Track your tournament expenses, match results, and calculate your ROI.")
+st.write("Easily track your tournament expenses, match results, and measure your return on investment as a junior tennis athlete.")
 
 # Initialize session state
 if 'data' not in st.session_state:
@@ -16,12 +70,12 @@ if 'data' not in st.session_state:
 
 # Form for data input
 with st.form("Tournament Entry"):
-    st.subheader("Add Tournament Data")
+    st.subheader("➕ Add Tournament Data")
     tournament = st.text_input("Tournament Name")
     date = st.date_input("Date")
     location = st.text_input("Location")
     category = st.selectbox("Category", ["J30", "J60", "J100", "ITF", "National", "Other"])
-    
+
     entry_fee = st.number_input("Entry Fee (€)", min_value=0.0)
     flights = st.number_input("Flight Cost (€)", min_value=0.0)
     hotel = st.number_input("Hotel Cost (€)", min_value=0.0)
@@ -65,21 +119,21 @@ if not st.session_state.data.empty:
     st.subheader("💰 ROI Analysis")
     st.write("### Total Spent per Tournament")
     fig1, ax1 = plt.subplots()
-    ax1.bar(st.session_state.data["Tournament"], st.session_state.data["Total Cost"])
+    ax1.bar(st.session_state.data["Tournament"], st.session_state.data["Total Cost"], color='#191970')
     ax1.set_ylabel("€")
     ax1.set_xticklabels(st.session_state.data["Tournament"], rotation=45, ha='right')
     st.pyplot(fig1)
 
     st.write("### Cost per Ranking Point")
     fig2, ax2 = plt.subplots()
-    ax2.bar(st.session_state.data["Tournament"], st.session_state.data["Cost per Point"])
+    ax2.bar(st.session_state.data["Tournament"], st.session_state.data["Cost per Point"], color='#FFD700')
     ax2.set_ylabel("€/Point")
     ax2.set_xticklabels(st.session_state.data["Tournament"], rotation=45, ha='right')
     st.pyplot(fig2)
 
     st.write("### Cost per Match Win")
     fig3, ax3 = plt.subplots()
-    ax3.bar(st.session_state.data["Tournament"], st.session_state.data["Cost per Win"])
+    ax3.bar(st.session_state.data["Tournament"], st.session_state.data["Cost per Win"], color='#4169E1')
     ax3.set_ylabel("€/Win")
     ax3.set_xticklabels(st.session_state.data["Tournament"], rotation=45, ha='right')
     st.pyplot(fig3)
