@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
+import pydeck as pdk
 from io import BytesIO
 
 # Page config
@@ -80,7 +81,7 @@ if 'data' not in st.session_state:
     st.session_state.data = pd.DataFrame(columns=[
         "Tournament", "Date", "Location", "Category",
         "Entry Fee", "Flights", "Hotel", "Meals", "Coaching", "Miscellaneous",
-        "Match Wins", "Match Losses", "Ranking Points", "Notes"
+        "Match Wins", "Match Losses", "Ranking Points", "Notes", "Latitude", "Longitude"
     ])
 
 # Form for data input
@@ -102,6 +103,8 @@ with st.form("Tournament Entry"):
     match_losses = st.number_input("Match Losses", min_value=0)
     ranking_points = st.number_input("Ranking Points Gained", min_value=0)
     notes = st.text_area("Coach Notes / Match Journal")
+    latitude = st.number_input("Latitude (optional for map view)", format="%.6f")
+    longitude = st.number_input("Longitude (optional for map view)", format="%.6f")
 
     submitted = st.form_submit_button("Add Tournament")
     if submitted:
@@ -109,7 +112,8 @@ with st.form("Tournament Entry"):
             "Tournament": [tournament], "Date": [date], "Location": [location], "Category": [category],
             "Entry Fee": [entry_fee], "Flights": [flights], "Hotel": [hotel], "Meals": [meals],
             "Coaching": [coaching], "Miscellaneous": [misc],
-            "Match Wins": [match_wins], "Match Losses": [match_losses], "Ranking Points": [ranking_points], "Notes": [notes]
+            "Match Wins": [match_wins], "Match Losses": [match_losses], "Ranking Points": [ranking_points],
+            "Notes": [notes], "Latitude": [latitude], "Longitude": [longitude]
         })
         st.session_state.data = pd.concat([st.session_state.data, new_row], ignore_index=True)
         st.success("Tournament data added!")
@@ -153,6 +157,31 @@ if not st.session_state.data.empty:
     ax3.set_ylabel(f"{st.session_state.currency}/Win")
     ax3.set_xticklabels(st.session_state.data["Tournament"], rotation=45, ha='right')
     st.pyplot(fig3)
+
+    # Map Visualization
+    st.subheader("🗺️ Tournament Locations Map")
+    map_data = st.session_state.data.dropna(subset=["Latitude", "Longitude"])
+    if not map_data.empty:
+        st.pydeck_chart(pdk.Deck(
+            map_style='mapbox://styles/mapbox/light-v9',
+            initial_view_state=pdk.ViewState(
+                latitude=map_data["Latitude"].mean(),
+                longitude=map_data["Longitude"].mean(),
+                zoom=2,
+                pitch=0,
+            ),
+            layers=[
+                pdk.Layer(
+                    'ScatterplotLayer',
+                    data=map_data,
+                    get_position='[Longitude, Latitude]',
+                    get_color='[255, 215, 0, 160]',
+                    get_radius=50000,
+                )
+            ],
+        ))
+    else:
+        st.info("Add latitude and longitude to visualize tournament locations on a map.")
 
     # Totals summary
     st.subheader("📈 Cumulative Stats")
