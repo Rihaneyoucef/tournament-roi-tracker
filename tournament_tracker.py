@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import pydeck as pdk
 from io import BytesIO
+from geopy.geocoders import Nominatim
 
 # Page config
 st.set_page_config(page_title="Tournament ROI Tracker", layout="wide")
@@ -116,7 +117,18 @@ with st.form("Tournament Entry"):
             "Notes": [notes], "Latitude": [latitude], "Longitude": [longitude]
         })
         st.session_state.data = pd.concat([st.session_state.data, new_row], ignore_index=True)
-        st.success("Tournament data added!")
+        
+        # Attempt to autofill coordinates if empty
+        if latitude == 0.0 and longitude == 0.0 and location:
+            try:
+                from geopy.geocoders import Nominatim
+                geolocator = Nominatim(user_agent="tournament_tracker")
+                geo_location = geolocator.geocode(location)
+                if geo_location:
+                    latitude = geo_location.latitude
+                    longitude = geo_location.longitude
+            except Exception as e:
+                st.warning("Unable to fetch coordinates automatically. Please enter them manually.")
 
 # Display data
 if not st.session_state.data.empty:
